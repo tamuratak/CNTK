@@ -189,29 +189,20 @@ private:
                 }
             }
 
+            // First element is reserved for continous buffer
+            if (m_AggregationBuffer != 0)
+            {
+                m_noPackedGradientsIndex.insert(m_noPackedGradientsIndex.begin(), 1, (size_t)-1);
+            }
+
             // If running on GPU and NCCL not supported, initialize GPU and CPU data transfer
             if (!m_nccl.IsSupported() && (deviceId != CPUDEVICE))
             {
-                if (m_AggregationBuffer == 0)
+                for (size_t i : m_noPackedGradientsIndex)
                 {
-                    for (size_t i = 0; i < gradients.size(); i++)
-                    {
-                        m_gpuDataTransferers.push_back(std::make_unique<GPUDataTransferer>(deviceId, m_useAsyncAggregation));
-                        m_intermediateCPUBuffers.push_back(AllocateIntermediateBuffer(deviceId, gradients[i]->GetNumElements()));
-                    }
-                }
-                else
-                {
-                    // First element is reserved for continous buffer
-                    m_noPackedGradientsIndex.insert(m_noPackedGradientsIndex.begin(), 1, (size_t)-1);
                     m_gpuDataTransferers.push_back(std::make_unique<GPUDataTransferer>(deviceId, m_useAsyncAggregation));
-                    m_intermediateCPUBuffers.push_back(AllocateIntermediateBuffer(deviceId, PackedGradientsSizeInElements));
-
-                    for (size_t i : m_noPackedGradientsIndex)
-                    {
-                        m_gpuDataTransferers.push_back(std::make_unique<GPUDataTransferer>(deviceId, m_useAsyncAggregation));
-                        m_intermediateCPUBuffers.push_back(AllocateIntermediateBuffer(deviceId, gradients[i]->GetNumElements()));
-                    }
+                    m_intermediateCPUBuffers.push_back(AllocateIntermediateBuffer(deviceId,
+                        (i == -1) ? PackedGradientsSizeInElements : gradients[i]->GetNumElements()));
                 }
             }
 
@@ -334,7 +325,7 @@ private:
                 {
                     reductionBuffer = m_AggregationBuffer->Data();
                 }
-                if (deviceId >= 0)
+                if (deviceId != CPUDEVICE)
                 {
                     m_gpuDataTransferers[allReduceIndex]->WaitForCopyGPUToCPUAsync();
                     reductionBuffer = m_intermediateCPUBuffers[allReduceIndex].get();
@@ -342,6 +333,7 @@ private:
 
                 MPI_Iallreduce(MPI_IN_PLACE, reductionBuffer, (i == -1) ? m_AggregationBuffer->GetNumElements() : gradients[i]->GetNumElements(),
                     MPIWrapper::GetDataType(reductionBuffer), MPI_SUM, m_mpi->Communicator(), &allReduceRequests.back()) || MpiFail("MPI_Iallreduce");
+                allReduceIndex++;
             }
         } 
         else

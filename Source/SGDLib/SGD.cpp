@@ -38,8 +38,6 @@
 #include <map>
 #include <set>
 
-#define _DEFAULT_PACK_THRESHOLD_SIZE_IN_KB 32
-
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 using namespace std;
