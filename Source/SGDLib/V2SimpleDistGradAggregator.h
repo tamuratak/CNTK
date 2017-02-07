@@ -330,13 +330,13 @@ private:
                     m_AggregationBuffer->ColumnSlice(offset, gradients[i]->GetNumElements()).AssignValuesOf(gradients[i]->Reshaped(1, gradients[i]->GetNumElements()));
                     offset += gradients[i]->GetNumElements();
                 }
-                m_nccl.AllReduce(m_AggregationBuffer.get());
-
-                // All reduce the rest of un-packed gradients
+                std::vector<Matrix<ElemType>*> ncclReduceGradients;
+                ncclReduceGradients.push_back(m_AggregationBuffer.get());
                 for (size_t i : m_noPackedGradientsIndex)
                 {
-                    m_nccl.AllReduce(gradients[i]);
+                    ncclReduceGradients.push_back(gradients[i]);
                 }
+                m_nccl.AllReduce(ncclReduceGradients);
             }
         }
 
