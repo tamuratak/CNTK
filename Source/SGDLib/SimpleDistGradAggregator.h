@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Constants.h"
 #include "IDistGradAggregator.h"
 #include "CUDAPageLockedMemAllocator.h"
 #include "NcclComm.h"
@@ -13,8 +14,6 @@
 #include "GPUDataTransferer.h"
 #include "TimerUtility.h"
 #include "MatrixQuantizerImpl.h"
-
-#define _DEFAULT_PACK_THRESHOLD_SIZE_IN_BYTES (32 * 1024)
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 

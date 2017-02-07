@@ -9,14 +9,13 @@
 #include <future>
 
 #undef _SCL_SECURE_NO_WARNINGS
+#include "Constants.h"
 #include "CNTKLibrary.h"
 #include "IDistGradAggregator.h"
 #include "TimerUtility.h"
 #include "MatrixQuantizerImpl.h"
 #include "Utils.h"
 #include "NcclComm.h"
-
-#define _DEFAULT_PACK_THRESHOLD_SIZE_IN_BYTES (32 * 1024)
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 

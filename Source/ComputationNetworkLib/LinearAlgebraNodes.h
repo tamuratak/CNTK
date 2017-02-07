@@ -6,6 +6,7 @@
 
 #include "Basics.h"
 #include "ComputationNode.h"
+#include "Constants.h"
 #include "Matrix.h"
 #include "TensorView.h"
 #include <unordered_set>
@@ -21,8 +22,6 @@
 #include <set>
 #include "Quantizers.h"
 #include "InputAndParamNodes.h"
-
-#define _DEFAULT_PACK_THRESHOLD_SIZE_IN_BYTES (32 * 1024)
 
 namespace Microsoft { namespace MSR { namespace CNTK {
 

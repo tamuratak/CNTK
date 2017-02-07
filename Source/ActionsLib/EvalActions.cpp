@@ -12,6 +12,7 @@
 #include "Actions.h"
 #include "ComputationNetwork.h"
 #include "ComputationNode.h"
+#include "Constants.h"
 #include "DataReader.h"
 #include "DataWriter.h"
 #include "Config.h"
@@ -38,8 +39,6 @@
 using namespace std;
 using namespace Microsoft::MSR;
 using namespace Microsoft::MSR::CNTK;
-
-#define _DEFAULT_PACK_THRESHOLD_SIZE_IN_KB 32
 
 bool GetDistributedMBReadingDefaultValue(const ConfigParameters& config, const IDataReader& reader)
 {
