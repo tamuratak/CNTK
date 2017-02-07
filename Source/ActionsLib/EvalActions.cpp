@@ -39,6 +39,8 @@ using namespace std;
 using namespace Microsoft::MSR;
 using namespace Microsoft::MSR::CNTK;
 
+#define _DEFAULT_PACK_THRESHOLD_SIZE_IN_KB 32
+
 bool GetDistributedMBReadingDefaultValue(const ConfigParameters& config, const IDataReader& reader)
 {
     // Return 'true' if we're running a parallel training with a v2 reader, 'false' otherwise.
@@ -68,7 +70,7 @@ static void DoEvalBase(const ConfigParameters& config, IDataReader& reader)
     size_t maxSamplesInRAM = config(L"maxSamplesInRAM", (size_t)SIZE_MAX);
     size_t numSubminiBatches = config(L"numSubminibatches", (size_t)1);
 
-    size_t packThresholdSize = config(L"packThresholdSizeInKB", (size_t)32) * 1024;
+    size_t packThresholdSizeInBytes = config(L"packThresholdSizeInKB", (size_t)_DEFAULT_PACK_THRESHOLD_SIZE_IN_KB) * 1024;
 
     bool enableDistributedMBReading = config(L"distributedMBReading", GetDistributedMBReadingDefaultValue(config, reader));
 
@@ -82,7 +84,7 @@ static void DoEvalBase(const ConfigParameters& config, IDataReader& reader)
                            config(L"traceNodeNamesSparse",   ConfigParameters::Array(stringargvector())));
 
     SimpleEvaluator<ElemType> eval(net, MPIWrapper::GetInstance(), enableDistributedMBReading, numMBsToShowResult, 
-                                   firstMBsToShowResult, traceLevel, maxSamplesInRAM, numSubminiBatches, packThresholdSize);
+                                   firstMBsToShowResult, traceLevel, maxSamplesInRAM, numSubminiBatches, packThresholdSizeInBytes);
     eval.Evaluate(&reader, evalNodeNamesVector, mbSize[0], epochSize);
 }
 
@@ -136,7 +138,7 @@ void DoCrossValidate(const ConfigParameters& config)
     size_t maxSamplesInRAM    = config(L"maxSamplesInRAM", (size_t)SIZE_MAX);
     size_t numSubminiBatches  = config(L"numSubminibatches", (size_t)1);
 
-    size_t packThresholdSize = config(L"packThresholdSizeInKB", (size_t)32) * 1024;
+    size_t packThresholdSizeInBytes = config(L"packThresholdSizeInKB", (size_t)_DEFAULT_PACK_THRESHOLD_SIZE_IN_KB) * 1024;
 
     ConfigArray evalNodeNames = config(L"evalNodeNames", "");
     vector<wstring> evalNodeNamesVector;
@@ -174,7 +176,7 @@ void DoCrossValidate(const ConfigParameters& config)
         // BUGBUG: ^^ Should use GetModelFromConfig()
 
         SimpleEvaluator<ElemType> eval(net, MPIWrapper::GetInstance(), enableDistributedMBReading, numMBsToShowResult,
-            firstMBsToShowResult, traceLevel, maxSamplesInRAM, numSubminiBatches, packThresholdSize);
+            firstMBsToShowResult, traceLevel, maxSamplesInRAM, numSubminiBatches, packThresholdSizeInBytes);
 
         fprintf(stderr, "Model %ls --> \n", cvModelPath.c_str());
         auto evalErrors = eval.Evaluate(&cvDataReader, evalNodeNamesVector, mbSize[0], epochSize);
