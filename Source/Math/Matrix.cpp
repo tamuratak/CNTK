@@ -1685,7 +1685,12 @@ void Matrix<ElemType>::AdamUpdate(Matrix<ElemType>& gradients, Matrix<ElemType>&
     let biasCorrection = (ElemType)(sqrt(1- pow(varMomentum, smoothedCount))/(1- pow(meanMomentum, smoothedCount)));
 
     DISPATCH_MATRIX_ON_FLAG(&gradients, &gradients,
-    { NOT_IMPLEMENTED; },
+    {
+        m_CPUMatrix->Adam(*gradients.m_CPUMatrix, *functionValues.m_CPUMatrix,
+        (ElemType)learnRatePerSample, (ElemType)meanMomentum, (ElemType)varMomentum,
+        biasCorrection, unitGainMomentum);
+        SetDataLocation(CPU);
+    },
     {
         m_GPUMatrix->Adam(*gradients.m_GPUMatrix, *functionValues.m_GPUMatrix,
         (ElemType)learnRatePerSample, (ElemType)meanMomentum, (ElemType)varMomentum,
