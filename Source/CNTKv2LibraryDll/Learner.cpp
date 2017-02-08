@@ -581,7 +581,7 @@ namespace CNTK
 
         double& smoothedCount = m_smoothedCounts.at(parameter);
 
-        smoothedGradientMatrix->AdamUpdate(trainingSampleCount, *gradientMatrix, *parameterMatrix, smoothedCount, learningRate,
+        smoothedGradientMatrix->AdamUpdate(*gradientMatrix, *parameterMatrix, smoothedCount, learningRate,
             momentum, varMomentum, UseUnitGainMomentum());
     }
 

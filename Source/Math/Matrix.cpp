@@ -1677,8 +1677,7 @@ void Matrix<ElemType>::FSAdagradUpdate(size_t mbSize,
 // Ref: ADAM: A METHOD FOR STOCHASTIC OPTIMIZATION, https://arxiv.org/pdf/1412.6980.pdf
 ///
 template <class ElemType>
-void Matrix<ElemType>::AdamUpdate(size_t mbSize,
-    Matrix<ElemType>& gradients, Matrix<ElemType>& functionValues, double& smoothedCount,
+void Matrix<ElemType>::AdamUpdate(Matrix<ElemType>& gradients, Matrix<ElemType>& functionValues, double& smoothedCount,
     const double learnRatePerSample, const double meanMomentum, const double varMomentum, bool unitGainMomentum)
 {
     smoothedCount++;

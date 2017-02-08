@@ -216,8 +216,7 @@ public:
                          const double learnRatePerSample, const double targetAdagradAvDenom,
                          const double meanMomentum, const double varMomentum, bool unitGainMomentum = true);
 
-    void AdamUpdate(size_t mbSize,
-        Matrix<ElemType>& gradients, Matrix<ElemType>& functionValues, double& smoothedCount,
+    void AdamUpdate(Matrix<ElemType>& gradients, Matrix<ElemType>& functionValues, double& smoothedCount,
         const double learnRatePerSample, const double meanMomentum, const double varMomentum, bool unitGainMomentum = true);
 
     ElemType RmsProp(Matrix<ElemType>& gradients, ElemType RMS_GAMMA, ElemType RMS_WGT_INC, ElemType RMS_WGT_MAX, ElemType RMS_WGT_DEC, ElemType RMS_WGT_MIN, const bool needAveMultiplier);
