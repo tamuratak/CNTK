@@ -78,11 +78,11 @@ namespace CNTK
             return nullptr;
     }
 
-    Variable Variable::CompositePreservingCopy() const
+    Variable Variable::CompositePreservingCopy(const std::shared_ptr<const Function>& composite) const
     {
         // We have to preserve the whole subgraph.
         Variable result;
-        result.m_outputComposite = (FunctionPtr)(*this);
+        result.m_outputComposite = composite;
         result.m_dataFields = m_dataFields;
         return result;
     }
@@ -101,7 +101,7 @@ namespace CNTK
     Variable::operator FunctionPtr() const
     {
         auto varOwner = Owner();
-        if (varOwner)
+        if (varOwner && (varOwner->RawOutputs().size() == 1))
             return AsComposite(varOwner, varOwner->Name());
         else
             return Combine({ *this });

@@ -229,13 +229,6 @@ namespace CNTK
             allPrimitiveFunctions.insert(root);
 
             auto primitiveFunction = dynamic_cast<PrimitiveFunction*>(root.get());
-
-            // Since Combine simply forwards other functions' outputs, all of its outputs
-            // should already be in the uidToInputMap.
-            auto opType = primitiveFunction->OpType();
-            if (opType == PrimitiveOpType::Combine)
-                continue;
-
             if (primitiveFunction->IsStateful())
             {
                 if (stateDictionary.Contains(primitiveFunction->Uid()))
@@ -451,6 +444,36 @@ namespace CNTK
 
         return computationNodePtr;
     }
+    
+    /*static*/ Variable CompositeFunction::GetMappingVariable(const Variable& variable, bool recursive)
+    {
+        Variable mappingVariable = variable;
+
+        auto ownerFunc = variable.IsOutput() ? variable.Owner().get() : nullptr;
+        auto ownerPrimitiveFunc = dynamic_cast<PrimitiveFunction*>(ownerFunc);
+        if (ownerPrimitiveFunc)
+        {
+            if (ownerPrimitiveFunc->OpType() == PrimitiveOpType::Combine)
+            {
+                const auto& allOutputs = ownerPrimitiveFunc->RawOutputs();
+                auto iter = std::find(allOutputs.begin(), allOutputs.end(), variable);
+                assert(iter != allOutputs.end());
+                auto outputIndex = std::distance(allOutputs.begin(), iter);
+                mappingVariable = ownerPrimitiveFunc->Inputs()[outputIndex];
+            }
+            else
+            {
+                auto ownerBlockFunc = dynamic_cast<BlockFunction*>(ownerFunc);
+                if (ownerBlockFunc)
+                    mappingVariable = ownerBlockFunc->CompositeOutputsMap().at(variable);
+            }
+        }
+
+        if (recursive && (mappingVariable != variable))
+            return GetMappingVariable(mappingVariable);
+        else
+            return mappingVariable;
+    }
 
     template <typename ElementType>
     /*static*/ ComputationNodeBasePtr CompositeFunction::CreateComputationNode(const Variable& variable,
@@ -459,6 +482,11 @@ namespace CNTK
                                                                                Microsoft::MSR::CNTK::ComputationNetworkPtr& network,
                                                                                std::unordered_map<Variable, ComputationNodeBasePtr>& variableToNodeMap)
     {
+        PrimitiveFunction* primitiveFunction = dynamic_cast<PrimitiveFunction*>(function);
+        auto functionInputs = function->Inputs();
+        if (primitiveFunction && (primitiveFunction->OpType() == PrimitiveOpType::Combine))
+            return variableToNodeMap[GetMappingVariable(variable)];
+
         ComputationNodeBasePtr computationNodePtr;
 
         auto internalNodeName = CNTKInternalNodeNameFromUidAndName(function->Uid(), function->Name());
@@ -467,10 +495,8 @@ namespace CNTK
         for (auto inputNode : inputNodes)
             inputNodesBasePtrs.push_back(inputNode);
 
-        PrimitiveFunction* primitiveFunction = dynamic_cast<PrimitiveFunction*>(function);
         if (primitiveFunction)
         {
-            auto functionInputs = function->Inputs();
             auto& functionConfig = function->Attributes();
             PrimitiveOpType op = primitiveFunction->OpType();
 
@@ -721,11 +747,6 @@ namespace CNTK
                 computationNodePtr = New<BatchNormalizationNode<ElementType>>(network->GetDeviceId(), internalNodeName, spatial, normalizationTimeConstant, blendTimeConstant, epsilon, !useCuDNNEngine, ImageLayoutKind::CHW);
                 break;
             }
-            case PrimitiveOpType::Combine:
-                // This operation is just a no-op and is a means to combine multiple functions to create a single Function
-                // whose outputs are a union of the outputs of the Functions being combined.
-                computationNodePtr = variableToNodeMap[variable];
-                break;
             case PrimitiveOpType::PackedIndex:
                 computationNodePtr = New<PackedIndexNode<ElementType>>(network->GetDeviceId(), internalNodeName);
                 break;
@@ -960,9 +981,8 @@ namespace CNTK
 
             std::function<bool(const Variable&)> IsVariableRoot;
             IsVariableRoot = [this, &IsVariableRoot](const Variable& outputVar) {
-                auto ownerFunc = outputVar.IsOutput() ? outputVar.Owner().get() : nullptr;
-                auto ownerBlockFunc = dynamic_cast<BlockFunction*>(ownerFunc);
-                return (m_isVariableRootMap[outputVar] && (!ownerBlockFunc || IsVariableRoot(ownerBlockFunc->CompositeOutputsMap().at(outputVar))));
+                auto mappingVariable = GetMappingVariable(outputVar);
+                return (m_isVariableRootMap[outputVar] && ((mappingVariable == outputVar) || IsVariableRoot(mappingVariable)));
             };
 
             // If any of the function or requested outputs is not a root node, we need to explicitly
@@ -1071,10 +1091,6 @@ namespace CNTK
             allNetworkRoots.insert(forwardRootNodes.begin(), forwardRootNodes.end());
             allNetworkRoots.insert(forwardOutputNodes.begin(), forwardOutputNodes.end());
             m_allNetworkRootsInGlobalEvalOrder = m_computationNetwork->SortByGlobalEvalOrder(allNetworkRoots);
-
-            m_currentOutputs = outputs;
-            m_currentOutputs.insert(rootFunctionOutputs.begin(), rootFunctionOutputs.end());
-            m_currentOutputs.insert(m_currentBackpropRoots.begin(), m_currentBackpropRoots.end());
         }
         else
         {
@@ -1082,7 +1098,8 @@ namespace CNTK
             // in the cached computation network
             for (auto output : outputs)
             {
-                if (m_currentOutputs.find(output) == m_currentOutputs.end())
+                auto computationNode = m_variableToNodeMap.at(output);
+                if (std::find(m_allNetworkRootsInGlobalEvalOrder.begin(), m_allNetworkRootsInGlobalEvalOrder.end(), computationNode) == m_allNetworkRootsInGlobalEvalOrder.end())
                     LogicError("Changing requested outputs across different Forward calls on a CNTK composite Function is currently unsupported");
             }
         }
