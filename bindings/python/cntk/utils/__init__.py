@@ -681,3 +681,32 @@ def _as_tuple(x):
     if np.isscalar(x):
         x = (x,)
     return tuple(x)
+
+def start_profiler(dir='profiler', sync_gpu=True, reserve_mem=cntk_py.default_profiler_buffer_size):
+    '''
+    start profiler to prepare performance statistics gathering.
+
+    Args:
+        dir: directory for profiler output
+        sync_gpu: whether profiler syncs CPU with GPU when timing
+        reserve_mem: 
+    '''
+    cntk_py.start_profiler(dir, sync_gpu, reserve_mem)
+    
+def stop_profiler():
+    '''
+    stop profiler from gathering performance statistics
+    '''
+    cntk_py.stop_profiler()
+    
+def enable_profiler():
+    '''
+    enable profiler to gather data.
+    '''
+    cntk_py.enable_profiler()
+    
+def disable_profiler():
+    '''
+    disable profiler from gathering data.
+    '''
+    cntk_py.disable_profiler()

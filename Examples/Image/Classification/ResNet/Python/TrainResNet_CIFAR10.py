@@ -15,7 +15,7 @@ from cntk.ops import input_variable, cross_entropy_with_softmax, classification_
 from cntk.io import MinibatchSource, ImageDeserializer, StreamDef, StreamDefs
 from cntk import Trainer, cntk_py
 from cntk.learner import momentum_sgd, learning_rate_schedule, momentum_as_time_constant_schedule, UnitType
-from _cntk_py import set_computation_network_trace_level, start_profiler, stop_profiler, enable_profiler
+from _cntk_py import set_computation_network_trace_level
 
 from resnet_models import *
 

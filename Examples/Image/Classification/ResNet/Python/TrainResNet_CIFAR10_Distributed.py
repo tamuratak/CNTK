@@ -15,7 +15,7 @@ from cntk.utils import *
 from cntk.ops import input_variable, cross_entropy_with_softmax, classification_error
 from cntk import Trainer, cntk_py 
 from cntk.learner import momentum_sgd, learning_rate_schedule, momentum_as_time_constant_schedule, UnitType
-from _cntk_py import set_computation_network_trace_level, start_profiler, stop_profiler
+from _cntk_py import set_computation_network_trace_level
 from cntk.device import set_default_device, gpu
 from cntk.distributed import data_parallel_distributed_learner, block_momentum_distributed_learner, Communicator
 

@@ -271,7 +271,8 @@ namespace CNTK
         CNTK_API void EnableGradientAccumulationOptimization();
         CNTK_API void DisableGradientAccumulationOptimization();
 
-        CNTK_API void StartProfiler(const std::wstring& profilerDir = L".", bool profilerSyncGpu = false, size_t profilerBufferSize = 32 * 1024 * 1024);
+        static const uint64_t DefaultProfilerBufferSize = 32 * 1024 * 1024;
+        CNTK_API void StartProfiler(const std::wstring& profilerDir = L"profiler", bool profilerSyncGpu = false, size_t profilerBufferSize = DefaultProfilerBufferSize);
         CNTK_API void EnableProfiler();
         CNTK_API void DisableProfiler();
         CNTK_API void StopProfiler();
