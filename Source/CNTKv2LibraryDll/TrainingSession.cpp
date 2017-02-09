@@ -231,8 +231,9 @@ namespace CNTK
     {
         size_t workerRank = m_workerRank, numberOfWorkers = m_numberOfWorkers;
 
-
+        // Check if we are operating in distributed mode.
         if (m_parallelAfterSamples > m_trainer->TotalNumberOfSamplesSeen())
+        {
             numberOfWorkers = 1;
             workerRank = 0;
         }
