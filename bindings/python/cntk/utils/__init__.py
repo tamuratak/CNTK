@@ -689,7 +689,7 @@ def _as_tuple(x):
 
 def start_profiler(dir='profiler', sync_gpu=True, reserve_mem=cntk_py.default_profiler_buffer_size):
     '''
-    start profiler to prepare performance statistics gathering.
+    Start profiler to prepare performance statistics gathering. Note that profiler is not enabled after start.
 
     Args:
         dir: directory for profiler output
@@ -700,18 +700,18 @@ def start_profiler(dir='profiler', sync_gpu=True, reserve_mem=cntk_py.default_pr
     
 def stop_profiler():
     '''
-    stop profiler from gathering performance statistics
+    Stop profiler from gathering performance statistics and flush them to file
     '''
     cntk_py.stop_profiler()
     
 def enable_profiler():
     '''
-    enable profiler to gather data.
+    Enable profiler to gather data. Note that in training_session, profiler would be enabled automatically after the first check point
     '''
     cntk_py.enable_profiler()
     
 def disable_profiler():
     '''
-    disable profiler from gathering data.
+    Disable profiler from gathering data.
     '''
     cntk_py.disable_profiler()
