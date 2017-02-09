@@ -689,7 +689,7 @@ def start_profiler(dir='profiler', sync_gpu=True, reserve_mem=cntk_py.default_pr
     Args:
         dir: directory for profiler output
         sync_gpu: whether profiler syncs CPU with GPU when timing
-        reserve_mem: 
+        reserve_mem: size in byte for profiler memory reserved
     '''
     cntk_py.start_profiler(dir, sync_gpu, reserve_mem)
     
