@@ -152,7 +152,7 @@ private:
             size_t PackedGradientsSizeInElements = 0;
             for (size_t i = 0; i < gradients.size(); i++)
             {
-                if (sizeof(ElemType) * gradients[i]->GetNumElements() <= m_packThresholdSizeInBytes)
+                if (!m_useAsyncAggregation && sizeof(ElemType) * gradients[i]->GetNumElements() <= m_packThresholdSizeInBytes)
                 {
                     PackedGradientsSizeInElements += gradients[i]->GetNumElements();
                     m_PackedGradientsIndex.push_back(i);
@@ -172,11 +172,11 @@ private:
 
             // Packing matrices into continous buffer if not doing async aggregation
             m_AggregationBuffer.reset();
-            if (!m_useAsyncAggregation && PackedGradientsSizeInElements > 0)
+            if (PackedGradientsSizeInElements > 0)
             {
                 m_AggregationBuffer.reset(new (std::nothrow) Matrix<ElemType>(1, PackedGradientsSizeInElements, deviceId));
             }
-            // Failed to allocate extra continous buffer
+            // If no extra continous buffer allocated or using async aggregation
             if (m_AggregationBuffer == 0)
             {
                 m_noPackedGradientsIndex.clear();

@@ -12,7 +12,6 @@
 #include "Actions.h"
 #include "ComputationNetwork.h"
 #include "ComputationNode.h"
-#include "Constants.h"
 #include "DataReader.h"
 #include "DataWriter.h"
 #include "Config.h"
@@ -69,8 +68,6 @@ static void DoEvalBase(const ConfigParameters& config, IDataReader& reader)
     size_t maxSamplesInRAM = config(L"maxSamplesInRAM", (size_t)SIZE_MAX);
     size_t numSubminiBatches = config(L"numSubminibatches", (size_t)1);
 
-    size_t packThresholdSizeInBytes = config(L"packThresholdSizeInKB", (size_t)_DEFAULT_PACK_THRESHOLD_SIZE_IN_KB) * 1024;
-
     bool enableDistributedMBReading = config(L"distributedMBReading", GetDistributedMBReadingDefaultValue(config, reader));
 
     vector<wstring> evalNodeNamesVector;
@@ -83,7 +80,7 @@ static void DoEvalBase(const ConfigParameters& config, IDataReader& reader)
                            config(L"traceNodeNamesSparse",   ConfigParameters::Array(stringargvector())));
 
     SimpleEvaluator<ElemType> eval(net, MPIWrapper::GetInstance(), enableDistributedMBReading, numMBsToShowResult, 
-                                   firstMBsToShowResult, traceLevel, maxSamplesInRAM, numSubminiBatches, packThresholdSizeInBytes);
+                                   firstMBsToShowResult, traceLevel, maxSamplesInRAM, numSubminiBatches);
     eval.Evaluate(&reader, evalNodeNamesVector, mbSize[0], epochSize);
 }
 
@@ -137,8 +134,6 @@ void DoCrossValidate(const ConfigParameters& config)
     size_t maxSamplesInRAM    = config(L"maxSamplesInRAM", (size_t)SIZE_MAX);
     size_t numSubminiBatches  = config(L"numSubminibatches", (size_t)1);
 
-    size_t packThresholdSizeInBytes = config(L"packThresholdSizeInKB", (size_t)_DEFAULT_PACK_THRESHOLD_SIZE_IN_KB) * 1024;
-
     ConfigArray evalNodeNames = config(L"evalNodeNames", "");
     vector<wstring> evalNodeNamesVector;
     for (int i = 0; i < evalNodeNames.size(); ++i)
@@ -175,7 +170,7 @@ void DoCrossValidate(const ConfigParameters& config)
         // BUGBUG: ^^ Should use GetModelFromConfig()
 
         SimpleEvaluator<ElemType> eval(net, MPIWrapper::GetInstance(), enableDistributedMBReading, numMBsToShowResult,
-            firstMBsToShowResult, traceLevel, maxSamplesInRAM, numSubminiBatches, packThresholdSizeInBytes);
+            firstMBsToShowResult, traceLevel, maxSamplesInRAM, numSubminiBatches);
 
         fprintf(stderr, "Model %ls --> \n", cvModelPath.c_str());
         auto evalErrors = eval.Evaluate(&cvDataReader, evalNodeNamesVector, mbSize[0], epochSize);
