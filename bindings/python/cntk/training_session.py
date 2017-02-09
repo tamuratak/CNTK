@@ -18,10 +18,13 @@ class TrainingSession(cntk_py.TrainingSession):
     a minibatch source and a :doc:`trainer <cntk.trainer>` and takes care of checkpointing.
     '''
     def __init__(self, training_minibatch_source, trainer, mb_size_schedule,
-                 progress_printer, model_inputs_to_mb_source_mapping, 
+                 progress_writers, model_inputs_to_mb_source_mapping,
                  checkpoint_frequency, checkpoint_filename):
-        self.progress_printer = progress_printer
-        self.trainer=trainer
+        if progress_writers and not isinstance(progress_writers, list):
+            progress_writers = [progress_writers]
+
+        self.progress_writers = progress_writers if progress_writers else trainer.progress_writers
+        self.trainer = trainer
         super(TrainingSession, self).__init__ (training_minibatch_source, trainer, model_inputs_to_mb_source_mapping, mb_size_schedule, checkpoint_frequency, checkpoint_filename)
 
     @typemap
@@ -36,12 +39,17 @@ class TrainingSession(cntk_py.TrainingSession):
         super(TrainingSession, self).train(device)
 
     def on_minibatch_end(self):
-        if self.progress_printer and self.trainer.total_number_of_samples_seen != 0:
-            self.progress_printer.update_with_trainer(self.trainer, with_metric=True)
+        # Only log progress if the trainer did not do it yet.
+        if not self.trainer.progress_writers and self.trainer.total_number_of_samples_seen != 0:
+            for progress_writer in self.progress_writers:
+                progress_writer.update_training_progress(
+                    self.trainer.previous_minibatch_sample_count,
+                    self.trainer.previous_minibatch_loss_average,
+                    self.trainer.previous_minibatch_evaluation_average)
 
     def on_checkpoint_end(self):
-        if self.progress_printer:
-            self.progress_printer.epoch_summary(with_metric=True)
+        for progress_writer in self.progress_writers:
+            progress_writer.write_training_summary(with_metric=True)
 
 @typemap
 def minibatch_size_schedule(schedule, epoch_size=1):
