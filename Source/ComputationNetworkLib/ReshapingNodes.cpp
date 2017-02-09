@@ -432,7 +432,16 @@ template <class ElemType>
     InputRef(INDEXDATA).MaskMissingValueColumnsTo(FrameRange(InputRef(INDEXDATA).GetMBLayout()), -1); // indicates an invalid column to Gather/Scatter
     let&  index  = InputRef(INDEXDATA) .Value(); // column indices to copy from
     let&  source = InputRef(SOURCEDATA).Value(); // source data to copy
-    auto& output =                      Value(); // output goes here
+
+    auto& outputValuePtrRef = ValuePtrRef();
+    if ((source.GetMatrixType() == SPARSE) && (outputValuePtrRef->GetMatrixType() != SPARSE))
+        outputValuePtrRef = std::make_shared<Matrix<ElemType>>(outputValuePtrRef->GetNumRows(),
+                                                               outputValuePtrRef->GetNumCols(),
+                                                               outputValuePtrRef->GetPreferredDeviceId(),
+                                                               source.GetMatrixType(),
+                                                               source.GetFormat());
+
+    auto& output = Value(); // output goes here
     output.DoGatherColumnsOf(/*beta=*/0, index, source, /*alpha=*/1);
 }
 
@@ -493,6 +502,15 @@ template <class ElemType>
     InputRef(INDEXDATA).MaskMissingValueColumnsTo(FrameRange(InputRef(INDEXDATA).GetMBLayout()), -1); // indicates an invalid column to Gather/Scatter
     let&  index  = InputRef(INDEXDATA) .Value(); // column indices to copy from
     let&  source = InputRef(SOURCEDATA).Value(); // source data to copy
+
+    auto& outputValuePtrRef = ValuePtrRef();
+    if ((source.GetMatrixType() == SPARSE) && (outputValuePtrRef->GetMatrixType() != SPARSE))
+        outputValuePtrRef = std::make_shared<Matrix<ElemType>>(outputValuePtrRef->GetNumRows(),
+                                                               outputValuePtrRef->GetNumCols(),
+                                                               outputValuePtrRef->GetPreferredDeviceId(),
+                                                               source.GetMatrixType(),
+                                                               source.GetFormat());
+
     auto& output =                      Value(); // output goes here
     output.DoScatterColumnsOf(/*beta=*/0, index, source, /*alpha=*/1);
 }
